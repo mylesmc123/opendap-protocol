@@ -529,9 +529,13 @@ def parse_slice(token):
             return ...
         elif ':' in token:
             rng = [int(s) for s in token.split(':')]
-            # The DAP protocol uses slicing including the last index.
-            # [0:20] in DAP translates to [0:21] in Python.
-            rng[1] += 1
+            # DAP2 format: [start:stop] or [start:stride:stop] (inclusive stop)
+            # Python slice: slice(start, stop, stride) (exclusive stop)
+            # Increment the last element (stop) to convert inclusive -> exclusive
+            rng[-1] += 1
+            if len(rng) == 3:
+                # DAP2: [start:stride:stop] -> Python: slice(start, stop+1, stride)
+                rng = [rng[0], rng[2], rng[1]]
             return slice(*rng)
 
 
